@@ -15,28 +15,32 @@ async function handler(req: Request): Promise<Response> {
 
   if (machIsbn) {
     const isbn = machIsbn.pathname.groups.isbn;
-    const res = await kv.get(["books", isbn]);
-    if (res.value) {
-      return new Response(JSON.stringify(res.value), { status: 200 });
+    if (req.method === "GET") {
+      const res = await kv.get(["books", isbn]);
+      if (res.value) {
+        return new Response(JSON.stringify(res.value), { status: 200 });
+      }
+      return new Response("Not found", { status: 404 });
+    } else if (req.method === "DELETE") {
+      await kv.delete(["books", isbn]);
+      return new Response("OK", { status: 200 });
     }
-    return new Response("Not found", { status: 404 });
   } else if (matchBooks) {
-    if (req.method === "POST") {
-      const body = await req.json();
-      const res = await kv.set(["books", body.isbn], { title: body.title, author: body.author });
-      return new Response(res.versionstamp, { status: 201 });
-    } else if (req.method === "GET") {
+    if (req.method === "GET") {
       const iter = await kv.list({ prefix: ["books"] }, { limit: 100 });
       const books = [];
       for await (const res of iter) {
         books.push(res.value);
       }
       return new Response(JSON.stringify(books), { status: 200 });
+    } else if (req.method === "POST") {
+      const body = await req.json();
+      const res = await kv.set(["books", body.isbn], { title: body.title, author: body.author });
+      return new Response(res.versionstamp, { status: 201 });
     }
   }
 
-  return new Response("Not found", { status: 404 });
+  return new Response("Bad Request", { status: 400 });
 }
 
-console.log("Listening on http://localhost:8000");
 serve(handler);
