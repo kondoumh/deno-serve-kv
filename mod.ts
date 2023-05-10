@@ -10,11 +10,11 @@ await kv.set(["books", "978-1-09-123456-3"], { title: "The Grapes of Wrath", aut
 await kv.set(["books", "978-1-09-123456-4"], { title: "Nineteen Eighty-Four", author: "George Orwell" }); 
 
 async function handler(req: Request): Promise<Response> {
-  const machIsbn = BOOKS_ISBN.exec(req.url);
+  const matchIsbn = BOOKS_ISBN.exec(req.url);
   const matchBooks = BOOKS.exec(req.url);
 
-  if (machIsbn) {
-    const isbn = machIsbn.pathname.groups.isbn;
+  if (matchIsbn) {
+    const isbn = matchIsbn.pathname.groups.isbn;
     if (req.method === "GET") {
       const res = await kv.get(["books", isbn]);
       if (res.value) {
