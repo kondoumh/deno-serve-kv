@@ -14,11 +14,11 @@ async function handler(req: Request): Promise<Response> {
   const matchBooks = BOOKS.exec(req.url);
 
   if (matchIsbn) {
-    const isbn = matchIsbn.pathname.groups.isbn;
+    const isbn = matchIsbn.pathname.groups.isbn ?? '';
     if (req.method === "GET") {
       const res = await kv.get(["books", isbn]);
       if (res.value) {
-        return new Response(JSON.stringify(res.value), { status: 200 });
+        return new Response(JSON.stringify(res), { status: 200 });
       }
       return new Response("Not found", { status: 404 });
     } else if (req.method === "DELETE") {
@@ -30,7 +30,7 @@ async function handler(req: Request): Promise<Response> {
       const iter = await kv.list({ prefix: ["books"] }, { limit: 100 });
       const books = [];
       for await (const res of iter) {
-        books.push(res.value);
+        books.push(res);
       }
       return new Response(JSON.stringify(books), { status: 200 });
     } else if (req.method === "POST") {
